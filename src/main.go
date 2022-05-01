@@ -2,14 +2,23 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 )
 
-func envOrDefault(name string, defaultValue string) string {
+func env(name string, required bool) string {
 	val := os.Getenv(name)
+	if len(val) == 0 && required {
+		log.Fatalf("Environment variable %s is required!", name)
+	}
+	return val
+}
+
+func envOrDefault(name string, defaultValue string) string {
+	val := env(name, false)
 	if len(val) == 0 {
 		return defaultValue
 	}
@@ -33,14 +42,14 @@ func main() {
 	}
 
 	manager := createManager(
-		envOrDefault("EMAIL_ADDRESS", "stuart@stut.net"),
+		env("EMAIL_ADDRESS", true),
 		envOrDefault("TAG_PREFIX", "urlprefix-"),
 		envOrDefault("KV_STATUS_ROOT", "certs/status/"),
 		envOrDefault("KV_CONFIG_ROOT", "certs/config/"),
 		envOrDefault("KV_CERT_ROOT", "certs/active/"),
 		envOrDefault("KV_CHALLENGE_ROOT", "certs/challenges/"),
 		renewWithin,
-		envOrDefault("CHALLENGE_RESPONDER_JOB_FILENAME", "local/challenge-responder.hcl"))
+		env("CHALLENGE_RESPONDER_JOB_FILENAME", true))
 
 	if runInterval.Seconds() == 0 {
 		manager.run()
