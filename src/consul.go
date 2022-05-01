@@ -1,0 +1,97 @@
+package main
+
+import (
+	"crypto/tls"
+	"github.com/hashicorp/consul/api"
+	"sort"
+	"strings"
+)
+
+func (manager *Manager) DiscoverDomainsFromConsul() ([]string, error) {
+	client, err := api.NewClient(api.DefaultConfig())
+	if err != nil {
+		return nil, err
+	}
+
+	catalog := client.Catalog()
+	services, _, err := catalog.Services(nil)
+	if err != nil {
+		return nil, err
+	}
+
+	domainMap := make(map[string]bool)
+	for _, tags := range services {
+		for _, tag := range tags {
+			if strings.HasPrefix(tag, manager.tagPrefix) {
+				url := strings.SplitN(tag, manager.tagPrefix, 2)[1]
+				if url[0] != '/' {
+					domainMap[strings.SplitN(url, "/", 2)[0]] = true
+				}
+			}
+		}
+	}
+
+	var domains []string
+	for domain, _ := range domainMap {
+		domains = append(domains, domain)
+	}
+	sort.Strings(domains)
+	return domains, nil
+}
+
+func (manager *Manager) GetValueFromConsul(key string) (value []byte, err error) {
+	var pair *api.KVPair
+	pair, _, err = manager.consulKv.Get(key, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if pair == nil {
+		return nil, nil
+	}
+
+	return pair.Value, nil
+}
+
+func (manager *Manager) SetValueInConsul(key string, value []byte) error {
+	pair := &api.KVPair{
+		Key:   key,
+		Value: value,
+	}
+
+	_, err := manager.consulKv.Put(pair, nil)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (manager *Manager) DeleteValueInConsul(key string) error {
+	_, err := manager.consulKv.Delete(key, nil)
+	return err
+}
+
+func (manager *Manager) GetCertificateFromConsul(domain string) (*tls.Certificate, error) {
+	certBytes, err := manager.GetValueFromConsul(manager.GetCertificateKey(domain, "cert"))
+	if err != nil {
+		return nil, err
+	}
+
+	if certBytes == nil {
+		return nil, nil
+	}
+
+	keyBytes, err := manager.GetValueFromConsul(manager.GetCertificateKey(domain, "key"))
+	if err != nil {
+		return nil, err
+	}
+
+	cert, err := tls.X509KeyPair(certBytes, keyBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cert, nil
+}
