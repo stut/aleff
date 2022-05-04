@@ -13,7 +13,6 @@ import (
 type Manager struct {
 	emailAddress                  string
 	tagPrefix                     string
-	kvStatusRoot                  string
 	kvConfigRoot                  string
 	kvCertRoot                    string
 	kvChallengeRoot               string
@@ -25,7 +24,7 @@ type Manager struct {
 	challengeResponderJob         *nomadApi.Job
 }
 
-func createManager(emailAddress string, tagPrefix string, statusRoot string, configRoot string, certRoot string, challengeRoot string, renewWithin time.Duration, challengeResponderJobFilename string) *Manager {
+func createManager(emailAddress string, tagPrefix string, configRoot string, certRoot string, challengeRoot string, renewWithin time.Duration, challengeResponderJobFilename string) *Manager {
 	var err error
 
 	// Make sure the challenge responder job definition file exists.
@@ -36,7 +35,6 @@ func createManager(emailAddress string, tagPrefix string, statusRoot string, con
 	manager := &Manager{
 		emailAddress:                  emailAddress,
 		tagPrefix:                     tagPrefix,
-		kvStatusRoot:                  statusRoot,
 		kvConfigRoot:                  configRoot,
 		kvCertRoot:                    certRoot,
 		kvChallengeRoot:               challengeRoot,

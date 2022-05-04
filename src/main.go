@@ -32,19 +32,18 @@ func main() {
 	// A RUN_INTERVAL of 0 will run just once and exit.
 	runInterval, err = time.ParseDuration(envOrDefault("RUN_INTERVAL", "0"))
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to parse RUN_INTERVAL: %v", err)
 	}
 
 	// Default renewWithin is 29 days.
 	renewWithin, err = time.ParseDuration(envOrDefault("RENEW_WITHIN", fmt.Sprintf("%dh", 24*29)))
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to parse RENEW_WITHIN: %v", err)
 	}
 
 	manager := createManager(
 		env("EMAIL_ADDRESS", true),
 		envOrDefault("TAG_PREFIX", "urlprefix-"),
-		envOrDefault("KV_STATUS_ROOT", "certs/status/"),
 		envOrDefault("KV_CONFIG_ROOT", "certs/config/"),
 		envOrDefault("KV_CERT_ROOT", "certs/active/"),
 		envOrDefault("KV_CHALLENGE_ROOT", "certs/challenges/"),
@@ -65,7 +64,7 @@ func main() {
 
 		select {
 		case <-sigs:
-			os.Exit(1)
+			os.Exit(0)
 		case <-time.After(runInterval):
 			break
 		}

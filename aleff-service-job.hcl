@@ -2,6 +2,7 @@ job "aleff" {
   datacenters = ["dc1"]
   
   group "processor" {
+    # Only one instance of aleff can run at once.
     count = 1
 
     ephemeral_disk {
@@ -18,7 +19,7 @@ job "aleff" {
 
       env {
         # How frequently to check for new domains and pending renewals.
-        RUN_INTERVAL = "5m"
+        RUN_INTERVAL = "24h"
 
         # Location of the challenge responder job definition file (see template below).
         CHALLENGE_RESPONDER_JOB_FILENAME = "local/challenge-responder.hcl"
@@ -80,6 +81,7 @@ job "aleff-challenge-responder" {
       }
 
       service {
+        # The necessary urlprefix- tag will be added by aleff before deploying this service.
         tags = []
         port = "http"
         check {
