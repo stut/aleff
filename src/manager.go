@@ -55,7 +55,7 @@ func createManager(emailAddress string, tagPrefix string, configRoot string, cer
 }
 
 func (manager *Manager) run() {
-	domains, err := manager.DiscoverDomainsFromConsul()
+	domains, err := manager.discoverDomainsFromConsul()
 	if err != nil {
 		panic(err)
 	}

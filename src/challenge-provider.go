@@ -11,12 +11,12 @@ import (
 )
 
 func (manager *Manager) Present(domain, token, keyAuth string) error {
-	err := manager.SetValueInConsul(manager.GetChallengeKey(token), []byte(keyAuth))
+	err := manager.setValueInConsul(manager.getChallengeKey(token), []byte(keyAuth))
 	if err != nil {
 		return err
 	}
 
-	err = manager.StartChallengeResponder(domain, token, keyAuth)
+	err = manager.startChallengeResponder(domain, token, keyAuth)
 	if err != nil {
 		return err
 	}
@@ -24,12 +24,12 @@ func (manager *Manager) Present(domain, token, keyAuth string) error {
 }
 
 func (manager *Manager) CleanUp(domain, token, keyAuth string) error {
-	err := manager.DeleteValueInConsul(manager.GetChallengeKey(token))
+	err := manager.DeleteValueInConsul(manager.getChallengeKey(token))
 	if err != nil {
 		return err
 	}
 
-	err = manager.StopChallengeResponder(domain)
+	err = manager.stopChallengeResponder(domain)
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func (manager *Manager) CleanUp(domain, token, keyAuth string) error {
 	return nil
 }
 
-func (manager *Manager) StartChallengeResponder(domain, token, keyAuth string) error {
+func (manager *Manager) startChallengeResponder(domain, token, keyAuth string) error {
 	log.Infof("[%s] aleff: Starting challenge responder...", domain)
 	client, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
@@ -81,7 +81,7 @@ func (manager *Manager) StartChallengeResponder(domain, token, keyAuth string) e
 	return fmt.Errorf("challenge responder did not start correctly within 30 seconds")
 }
 
-func (manager *Manager) StopChallengeResponder(domain string) error {
+func (manager *Manager) stopChallengeResponder(domain string) error {
 	log.Infof("[%s] aleff: Stopping challenge responder...", domain)
 	if manager.challengeResponderJob == nil {
 		return fmt.Errorf("")

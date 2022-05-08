@@ -34,8 +34,8 @@ func (manager *Manager) loadUser(privateKey *ecdsa.PrivateKey) (*MyUser, error) 
 	var err error
 	var myUser *MyUser
 
-	userKey := manager.GetUserKey()
-	userBytes, _ := manager.GetValueFromConsul(userKey)
+	userKey := manager.getUserKey()
+	userBytes, _ := manager.getValueFromConsul(userKey)
 	if userBytes == nil {
 		// Create a new user object.
 		myUser = &MyUser{
@@ -62,5 +62,5 @@ func (manager *Manager) saveUser(myUser *MyUser) error {
 	if err != nil {
 		return err
 	}
-	return manager.SetValueInConsul(manager.GetUserKey(), userBytes)
+	return manager.setValueInConsul(manager.getUserKey(), userBytes)
 }

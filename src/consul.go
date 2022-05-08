@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func (manager *Manager) DiscoverDomainsFromConsul() ([]string, error) {
+func (manager *Manager) discoverDomainsFromConsul() ([]string, error) {
 	client, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func (manager *Manager) DiscoverDomainsFromConsul() ([]string, error) {
 	return domains, nil
 }
 
-func (manager *Manager) GetValueFromConsul(key string) (value []byte, err error) {
+func (manager *Manager) getValueFromConsul(key string) (value []byte, err error) {
 	var pair *api.KVPair
 	pair, _, err = manager.consulKv.Get(key, nil)
 	if err != nil {
@@ -53,7 +53,7 @@ func (manager *Manager) GetValueFromConsul(key string) (value []byte, err error)
 	return pair.Value, nil
 }
 
-func (manager *Manager) SetValueInConsul(key string, value []byte) error {
+func (manager *Manager) setValueInConsul(key string, value []byte) error {
 	pair := &api.KVPair{
 		Key:   key,
 		Value: value,
@@ -74,7 +74,7 @@ func (manager *Manager) DeleteValueInConsul(key string) error {
 }
 
 func (manager *Manager) GetCertificateFromConsul(domain string) (*tls.Certificate, error) {
-	certBytes, err := manager.GetValueFromConsul(manager.GetCertificateKey(domain, "cert"))
+	certBytes, err := manager.getValueFromConsul(manager.getCertificateKey(domain, "cert"))
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func (manager *Manager) GetCertificateFromConsul(domain string) (*tls.Certificat
 		return nil, nil
 	}
 
-	keyBytes, err := manager.GetValueFromConsul(manager.GetCertificateKey(domain, "key"))
+	keyBytes, err := manager.getValueFromConsul(manager.getCertificateKey(domain, "key"))
 	if err != nil {
 		return nil, err
 	}

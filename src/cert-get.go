@@ -54,12 +54,12 @@ func (manager *Manager) getCertificate(domain string) error {
 		return err
 	}
 
-	err = manager.SetValueInConsul(manager.GetCertificateKey(domain, "key"), certificates.PrivateKey)
+	err = manager.setValueInConsul(manager.getCertificateKey(domain, "key"), certificates.PrivateKey)
 	if err != nil {
 		return err
 	}
 
-	err = manager.SetValueInConsul(manager.GetCertificateKey(domain, "cert"), certificates.Certificate)
+	err = manager.setValueInConsul(manager.getCertificateKey(domain, "cert"), certificates.Certificate)
 	if err != nil {
 		return err
 	}
