@@ -10,11 +10,11 @@ func (manager *Manager) directoryUrlToKey() string {
 }
 
 func (manager *Manager) getPrivateKeyKey() string {
-	return fmt.Sprintf("%s%s/%s", manager.kvConfigRoot, manager.directoryUrlToKey(), "private-key")
+	return fmt.Sprintf("%s%s/%s/%s", manager.kvConfigRoot, manager.directoryUrlToKey(), manager.emailAddress, "private-key")
 }
 
 func (manager *Manager) getUserKey() string {
-	return fmt.Sprintf("%s%s/%s", manager.kvConfigRoot, manager.directoryUrlToKey(), "user")
+	return fmt.Sprintf("%s%s/%s/%s", manager.kvConfigRoot, manager.directoryUrlToKey(), manager.emailAddress, "user")
 }
 
 func (manager *Manager) getChallengeKey(token string) string {

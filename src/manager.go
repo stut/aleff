@@ -55,6 +55,7 @@ func createManager(emailAddress string, tagPrefix string, configRoot string, cer
 }
 
 func (manager *Manager) run() {
+	log.Infof("aleff: Running...")
 	domains, err := manager.discoverDomainsFromConsul()
 	if err != nil {
 		panic(err)
@@ -66,4 +67,5 @@ func (manager *Manager) run() {
 			log.Warnf("[%s] aleff: Error: %v", domain, err)
 		}
 	}
+	log.Infof("aleff: Donw.")
 }
