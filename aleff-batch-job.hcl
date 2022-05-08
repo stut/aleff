@@ -2,8 +2,8 @@ job "aleff" {
   datacenters = ["dc1"]
 
   periodic {
-    # Run hourly.
-    cron             = "0 * * * * *"
+    # Run daily.
+    cron             = "@daily"
     # Only one instance of Aleff can run at once.
     prohibit_overlap = true
   }
