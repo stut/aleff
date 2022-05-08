@@ -1,13 +1,20 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
+
+func (manager *Manager) directoryUrlToKey() string {
+	return strings.ReplaceAll(manager.acmeDirectoryUrl, "/", "-")
+}
 
 func (manager *Manager) getPrivateKeyKey() string {
-	return fmt.Sprintf("%s%s/%s", manager.kvConfigRoot, manager.acmeDirectoryUrl, "private-key")
+	return fmt.Sprintf("%s%s/%s", manager.kvConfigRoot, manager.directoryUrlToKey(), "private-key")
 }
 
 func (manager *Manager) getUserKey() string {
-	return fmt.Sprintf("%s%s/%s", manager.kvConfigRoot, manager.acmeDirectoryUrl, "user")
+	return fmt.Sprintf("%s%s/%s", manager.kvConfigRoot, manager.directoryUrlToKey(), "user")
 }
 
 func (manager *Manager) getChallengeKey(token string) string {
