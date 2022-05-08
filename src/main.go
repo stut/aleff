@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/go-acme/lego/v4/log"
 )
 
 func env(name string, required bool) string {
@@ -36,7 +37,8 @@ func main() {
 	}
 
 	// Default renewWithin is 29 days.
-	renewWithin, err = time.ParseDuration(envOrDefault("RENEW_WITHIN", fmt.Sprintf("%dh", 24*29)))
+	renewWithinDefault := fmt.Sprintf("%dh", 24*29)
+	renewWithin, err = time.ParseDuration(envOrDefault("RENEW_WITHIN", renewWithinDefault))
 	if err != nil {
 		log.Fatalf("Failed to parse RENEW_WITHIN: %v", err)
 	}
@@ -47,6 +49,7 @@ func main() {
 		envOrDefault("KV_CONFIG_ROOT", "certs/config/"),
 		envOrDefault("KV_CERT_ROOT", "certs/active/"),
 		envOrDefault("KV_CHALLENGE_ROOT", "certs/challenges/"),
+		envOrDefault("ACME_DIR_URL", "https://acme-v02.api.letsencrypt.org/directory"),
 		renewWithin,
 		env("CHALLENGE_RESPONDER_JOB_FILENAME", true))
 

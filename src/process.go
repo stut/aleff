@@ -2,7 +2,7 @@ package main
 
 import (
 	"crypto/x509"
-	"log"
+	"github.com/go-acme/lego/v4/log"
 	"time"
 )
 
@@ -21,17 +21,19 @@ func (manager *Manager) processDomain(domain string) error {
 		}
 	}
 
-	timeNow := time.Now()
-
 	if leafCert == nil {
-		log.Printf("    Requesting new...")
+		log.Infof("[%s] aleff: Requesting new certificate...", domain)
 		err = manager.newCertificate(domain)
-	} else if timeNow.Add(manager.renewWithin).After(leafCert.NotAfter) {
-		log.Printf("    Renewing...")
-		err = manager.renewCertificate(domain)
 	} else {
-		log.Printf("    Valid, expires %v", leafCert.NotAfter)
-		return nil
+		hoursToRenewal := int(leafCert.NotAfter.Sub(time.Now().UTC()).Hours() - manager.renewWithin.Hours())
+
+		if hoursToRenewal <= 0 {
+			log.Infof("[%s] aleff: Renewing certificate...", domain)
+			err = manager.renewCertificate(domain)
+		} else {
+			log.Infof("[%s] aleff: Renewal due in %d hours", domain, hoursToRenewal)
+			err = nil
+		}
 	}
 
 	return err

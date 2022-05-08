@@ -2,30 +2,43 @@ package main
 
 import (
 	"fmt"
+	"github.com/go-acme/lego/v4/log"
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/nomad/jobspec"
-	"log"
+	"io/ioutil"
+	"net/http"
 	"time"
 )
 
 func (manager *Manager) Present(domain, token, keyAuth string) error {
-	err := manager.StartChallengeResponder(domain)
+	err := manager.SetValueInConsul(manager.GetChallengeKey(token), []byte(keyAuth))
 	if err != nil {
 		return err
 	}
-	return manager.SetValueInConsul(manager.GetChallengeKey(token), []byte(keyAuth))
+
+	err = manager.StartChallengeResponder(domain, token, keyAuth)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (manager *Manager) CleanUp(domain, token, keyAuth string) error {
-	err := manager.StopChallengeResponder()
+	err := manager.DeleteValueInConsul(manager.GetChallengeKey(token))
 	if err != nil {
 		return err
 	}
-	return manager.DeleteValueInConsul(manager.GetChallengeKey(token))
+
+	err = manager.StopChallengeResponder(domain)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (manager *Manager) StartChallengeResponder(domain string) error {
-	log.Printf("Starting challenge responder...")
+func (manager *Manager) StartChallengeResponder(domain, token, keyAuth string) error {
+	log.Infof("[%s] aleff: Starting challenge responder...", domain)
 	client, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
 		return err
@@ -37,15 +50,39 @@ func (manager *Manager) StartChallengeResponder(domain string) error {
 		fmt.Sprintf("urlprefix-%s/.well-known/acme-challenge/", domain))
 
 	_, _, err = client.Jobs().Register(manager.challengeResponderJob, nil)
+	if err != nil {
+		return err
+	}
 
-	// TODO: Is there a way to detect when Fabio has picked up the route rather than waiting so long?
-	time.Sleep(time.Second * 30)
+	// Give the job 60 seconds (12 tries with a 5 second delay) to respond correctly.
+	url := fmt.Sprintf("http://%s/.well-known/acme-challenge/%s", domain, token)
+	for i := 0; i < 12; i++ {
+		resp, err := http.Get(url)
+		if err != nil {
+			log.Warnf("[%s] aleff: Challenge responder still starting up...", domain)
+		} else {
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Warnf("[%s] aleff: Challenge responder still spinning up...", domain)
+			} else {
+				bodyString := string(body)
+				if bodyString != keyAuth {
+					log.Warnf("[%s] aleff: Challenge responder job still spinning up...", domain)
+				} else {
+					// Challenge responder is responding correctly, continue the validation process.
+					log.Infof("[%s] aleff: Challenge responder started, waiting for challenge...", domain)
+					return nil
+				}
+			}
+		}
+		time.Sleep(time.Second * 5)
+	}
 
-	return err
+	return fmt.Errorf("challenge responder did not start correctly within 30 seconds")
 }
 
-func (manager *Manager) StopChallengeResponder() error {
-	log.Printf("Stopping challenge responder...")
+func (manager *Manager) StopChallengeResponder(domain string) error {
+	log.Infof("[%s] aleff: Stopping challenge responder...", domain)
 	if manager.challengeResponderJob == nil {
 		return fmt.Errorf("")
 	}

@@ -2,6 +2,10 @@ package main
 
 import "fmt"
 
+func (manager *Manager) GetUserKey() string {
+	return fmt.Sprintf("%s%s", manager.kvConfigRoot, "user")
+}
+
 func (manager *Manager) GetChallengeKey(token string) string {
 	return fmt.Sprintf("%s%s", manager.kvChallengeRoot, token)
 }
