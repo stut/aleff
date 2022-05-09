@@ -1,5 +1,5 @@
 job "aleff-challenge-responder" {
-  datacenters = ["stutnet"]
+  datacenters = ["dc1"]
 
   group "responder" {
     count = 1
@@ -22,8 +22,7 @@ job "aleff-challenge-responder" {
       }
 
       env {
-        CONSUL_HTTP_ADDR = "http://192.168.200.1:8500"
-        NOMAD_ADDR = "http://192.168.200.1:4646"
+        CONSUL_HTTP_ADDR = "http://127.0.0.1:8500"
       }
 
       resources {
@@ -37,6 +36,7 @@ job "aleff-challenge-responder" {
       }
 
       service {
+        # The necessary urlprefix- tag will be added by aleff before deploying this service.
         tags = []
         port = "http"
         check {

@@ -6,12 +6,11 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/pem"
-	"fmt"
 )
 
 func (manager *Manager) getPrivateKey() (*ecdsa.PrivateKey, error) {
-	consulKey := fmt.Sprintf("%s%s", manager.kvConfigRoot, "private-key")
-	privateKeyBytes, _ := manager.GetValueFromConsul(consulKey)
+	consulKey := manager.getPrivateKeyKey()
+	privateKeyBytes, _ := manager.getValueFromConsul(consulKey)
 
 	if privateKeyBytes == nil {
 		// Generate and store a new key.
@@ -20,7 +19,7 @@ func (manager *Manager) getPrivateKey() (*ecdsa.PrivateKey, error) {
 			return nil, err
 		}
 		privateKeyBytes = encodeKey(privateKey)
-		err = manager.SetValueInConsul(consulKey, privateKeyBytes)
+		err = manager.setValueInConsul(consulKey, privateKeyBytes)
 	}
 
 	return decodeKey(privateKeyBytes)
