@@ -67,5 +67,5 @@ func (manager *Manager) run() {
 			log.Warnf("[%s] aleff: Error: %v", domain, err)
 		}
 	}
-	log.Infof("aleff: Donw.")
+	log.Infof("aleff: Done.")
 }
