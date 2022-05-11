@@ -47,7 +47,7 @@ func (manager *Manager) startChallengeResponder(domain, token, keyAuth string) e
 	manager.challengeResponderJob, err = jobspec.ParseFile(manager.challengeResponderJobFilename)
 	manager.challengeResponderJob.TaskGroups[0].Tasks[0].Services[0].Tags = append(
 		manager.challengeResponderJob.TaskGroups[0].Tasks[0].Services[0].Tags,
-		fmt.Sprintf("urlprefix-%s/.well-known/acme-challenge/", domain))
+		fmt.Sprintf("%s%s/.well-known/acme-challenge/", manager.tagPrefix, domain))
 
 	_, _, err = client.Jobs().Register(manager.challengeResponderJob, nil)
 	if err != nil {
