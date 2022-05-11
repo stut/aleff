@@ -8,12 +8,7 @@ import (
 )
 
 func (manager *Manager) discoverDomainsFromConsul() ([]string, error) {
-	client, err := api.NewClient(api.DefaultConfig())
-	if err != nil {
-		return nil, err
-	}
-
-	catalog := client.Catalog()
+	catalog := manager.consulClient.Catalog()
 	services, _, err := catalog.Services(nil)
 	if err != nil {
 		return nil, err

@@ -30,6 +30,7 @@ func createManager(emailAddress string, tagPrefix string, configRoot string, cer
 
 	// Make sure the challenge responder job definition file exists.
 	if _, err := os.Stat(challengeResponderJobFilename); errors.Is(err, os.ErrNotExist) {
+		metricErrorCounter.WithLabelValues(acmeDirectoryUrl, emailAddress, "-", "missing-challenge-responder-job-file")
 		log.Fatalf("Challenge responder job definition file not found: %s", challengeResponderJobFilename)
 	}
 
@@ -46,6 +47,7 @@ func createManager(emailAddress string, tagPrefix string, configRoot string, cer
 
 	manager.consulClient, err = consulApi.NewClient(consulApi.DefaultConfig())
 	if err != nil {
+		manager.markErrorMetric("-", "cannot-create-consul-client")
 		log.Fatalf("Failed to create consul client: %v", err)
 	}
 
@@ -54,16 +56,27 @@ func createManager(emailAddress string, tagPrefix string, configRoot string, cer
 	return manager
 }
 
+func (manager *Manager) markErrorMetric(domain, reason string) {
+	metricErrorCounter.WithLabelValues(manager.acmeDirectoryUrl, manager.emailAddress, domain, reason)
+}
+
 func (manager *Manager) run() {
 	log.Infof("aleff: Running...")
+	metricRunCounter.Inc()
 	domains, err := manager.discoverDomainsFromConsul()
 	if err != nil {
-		panic(err)
+		manager.markErrorMetric("-", "discover-domains")
+		log.Warnf("aleff: Failed to discover domains from Consul: %v", err)
+		return
 	}
+	metricDomainCount.Set(float64(len(domains)))
 
 	for _, domain := range domains {
+		metricLastRunTimestamp.WithLabelValues(manager.acmeDirectoryUrl, manager.emailAddress, domain).SetToCurrentTime()
 		err = manager.processDomain(domain)
 		if err != nil {
+			// No error metric recorded here as it will have been recorded with a correct reason label where the error
+			// occurred.
 			log.Warnf("[%s] aleff: Error: %v", domain, err)
 		}
 	}
