@@ -30,7 +30,7 @@ func createManager(emailAddress string, tagPrefix string, configRoot string, cer
 
 	// Make sure the challenge responder job definition file exists.
 	if _, err := os.Stat(challengeResponderJobFilename); errors.Is(err, os.ErrNotExist) {
-		metricErrorCounter.WithLabelValues(acmeDirectoryUrl, emailAddress, "-", "missing-challenge-responder-job-file")
+		metricErrorCounter.WithLabelValues(acmeDirectoryUrl, emailAddress, "-", "missing-challenge-responder-job-file").Inc()
 		log.Fatalf("Challenge responder job definition file not found: %s", challengeResponderJobFilename)
 	}
 
@@ -57,7 +57,7 @@ func createManager(emailAddress string, tagPrefix string, configRoot string, cer
 }
 
 func (manager *Manager) markErrorMetric(domain, reason string) {
-	metricErrorCounter.WithLabelValues(manager.acmeDirectoryUrl, manager.emailAddress, domain, reason)
+	metricErrorCounter.WithLabelValues(manager.acmeDirectoryUrl, manager.emailAddress, domain, reason).Inc()
 }
 
 func (manager *Manager) run() {

@@ -61,7 +61,7 @@ var (
 func env(name string, required bool) string {
 	val := os.Getenv(name)
 	if len(val) == 0 && required {
-		metricErrorCounter.WithLabelValues("-", "-", "-", fmt.Sprintf("env-misssing-%s", name))
+		metricErrorCounter.WithLabelValues("-", "-", "-", fmt.Sprintf("env-misssing-%s", name)).Inc()
 		log.Fatalf("Environment variable %s is required!", name)
 	}
 	return val
@@ -82,7 +82,7 @@ func main() {
 	// A RUN_INTERVAL of 0 will run just once and exit.
 	runInterval, err = time.ParseDuration(envOrDefault("RUN_INTERVAL", "0"))
 	if err != nil {
-		metricErrorCounter.WithLabelValues("-", "-", "-", "duration-parse-failure-RUN_INTERVAL")
+		metricErrorCounter.WithLabelValues("-", "-", "-", "duration-parse-failure-RUN_INTERVAL").Inc()
 		log.Fatalf("Failed to parse RUN_INTERVAL: %v", err)
 	}
 
@@ -90,7 +90,7 @@ func main() {
 	renewWithinDefault := fmt.Sprintf("%dh", 24*29)
 	renewWithin, err = time.ParseDuration(envOrDefault("RENEW_WITHIN", renewWithinDefault))
 	if err != nil {
-		metricErrorCounter.WithLabelValues("-", "-", "-", "duration-parse-failure-RENEW_WITHIN")
+		metricErrorCounter.WithLabelValues("-", "-", "-", "duration-parse-failure-RENEW_WITHIN").Inc()
 		log.Fatalf("Failed to parse RENEW_WITHIN: %v", err)
 	}
 
