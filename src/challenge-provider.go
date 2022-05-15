@@ -83,6 +83,8 @@ func (manager *Manager) startChallengeResponder(domain, token, keyAuth string) e
 		time.Sleep(time.Second * 5)
 	}
 
+	// Ignore any errors stopping the job if we've timed out. If it fails it has no effect other than being untidy.
+	_ = manager.stopChallengeResponder(domain)
 	return fmt.Errorf("challenge responder did not start correctly within %s", manager.challengeResponderJobTimeout.String())
 }
 
