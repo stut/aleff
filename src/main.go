@@ -76,7 +76,7 @@ func envOrDefault(name string, defaultValue string) string {
 }
 
 func main() {
-	var runInterval, renewWithin time.Duration
+	var runInterval, renewWithin, challengeResponderJobTimeout time.Duration
 	var err error
 
 	// A RUN_INTERVAL of 0 will run just once and exit.
@@ -94,6 +94,13 @@ func main() {
 		log.Fatalf("Failed to parse RENEW_WITHIN: %v", err)
 	}
 
+	challengeResponderJobTimeoutDefault := "1m"
+	challengeResponderJobTimeout, err = time.ParseDuration(envOrDefault("CHALLENGE_RESPONDER_JOB_TIMEOUT", challengeResponderJobTimeoutDefault))
+	if err != nil {
+		metricErrorCounter.WithLabelValues("-", "-", "-", "duration-parse-failure-CHALLENGE_RESPONDER_JOB_TIMEOUT").Inc()
+		log.Fatalf("Failed to parse CHALLENGE_RESPONDER_JOB_TIMEOUT: %v", err)
+	}
+
 	metricsListenAddress := envOrDefault("PROMETHEUS_LISTEN_ADDRESS",
 		fmt.Sprintf(":%s", envOrDefault("NOMAD_PORT_metrics", "2123")))
 
@@ -105,7 +112,8 @@ func main() {
 		envOrDefault("KV_CHALLENGE_ROOT", "certs/challenges/"),
 		envOrDefault("ACME_DIR_URL", "https://acme-v02.api.letsencrypt.org/directory"),
 		renewWithin,
-		env("CHALLENGE_RESPONDER_JOB_FILENAME", true))
+		env("CHALLENGE_RESPONDER_JOB_FILENAME", true),
+		challengeResponderJobTimeout)
 
 	if runInterval.Seconds() == 0 {
 		manager.run()

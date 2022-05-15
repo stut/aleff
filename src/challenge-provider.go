@@ -54,9 +54,14 @@ func (manager *Manager) startChallengeResponder(domain, token, keyAuth string) e
 		return err
 	}
 
-	// Give the job 60 seconds (12 tries with a 5 second delay) to respond correctly.
+	// Give the job the configured amount of time to respond correctly.
+	timeoutTime := time.Now().Add(manager.challengeResponderJobTimeout)
 	url := fmt.Sprintf("http://%s/.well-known/acme-challenge/%s", domain, token)
-	for i := 0; i < 12; i++ {
+	for {
+		if time.Now().After(timeoutTime) {
+			break
+		}
+
 		resp, err := http.Get(url)
 		if err != nil {
 			log.Warnf("[%s] aleff: Challenge responder still starting up...", domain)
@@ -78,7 +83,7 @@ func (manager *Manager) startChallengeResponder(domain, token, keyAuth string) e
 		time.Sleep(time.Second * 5)
 	}
 
-	return fmt.Errorf("challenge responder did not start correctly within 30 seconds")
+	return fmt.Errorf("challenge responder did not start correctly within %s", manager.challengeResponderJobTimeout.String())
 }
 
 func (manager *Manager) stopChallengeResponder(domain string) error {

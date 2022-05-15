@@ -23,9 +23,10 @@ type Manager struct {
 	renewWithin                   time.Duration
 	challengeResponderJobFilename string
 	challengeResponderJob         *nomadApi.Job
+	challengeResponderJobTimeout  time.Duration
 }
 
-func createManager(emailAddress string, tagPrefix string, configRoot string, certRoot string, challengeRoot string, acmeDirectoryUrl string, renewWithin time.Duration, challengeResponderJobFilename string) *Manager {
+func createManager(emailAddress string, tagPrefix string, configRoot string, certRoot string, challengeRoot string, acmeDirectoryUrl string, renewWithin time.Duration, challengeResponderJobFilename string, challengeResponderJobTimeout time.Duration) *Manager {
 	var err error
 
 	// Make sure the challenge responder job definition file exists.
@@ -43,6 +44,7 @@ func createManager(emailAddress string, tagPrefix string, configRoot string, cer
 		acmeDirectoryUrl:              acmeDirectoryUrl,
 		renewWithin:                   renewWithin,
 		challengeResponderJobFilename: challengeResponderJobFilename,
+		challengeResponderJobTimeout:  challengeResponderJobTimeout,
 	}
 
 	manager.consulClient, err = consulApi.NewClient(consulApi.DefaultConfig())
