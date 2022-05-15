@@ -19,8 +19,13 @@ func (manager *Manager) discoverDomainsFromConsul() ([]string, error) {
 		for _, tag := range tags {
 			if strings.HasPrefix(tag, manager.tagPrefix) {
 				url := strings.SplitN(tag, manager.tagPrefix, 2)[1]
+				url = strings.SplitN(url, " ", 2)[0]
 				if url[0] != '/' {
-					domainMap[strings.SplitN(url, "/", 2)[0]] = true
+					separator := "/"
+					if strings.Contains(url, ":") {
+						separator = ":"
+					}
+					domainMap[strings.SplitN(url, separator, 2)[0]] = true
 				}
 			}
 		}
