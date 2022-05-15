@@ -105,6 +105,7 @@ func main() {
 		fmt.Sprintf(":%s", envOrDefault("NOMAD_PORT_metrics", "2123")))
 
 	manager := createManager(
+		envOrDefault("DEFAULT", "enabled") == "enabled",
 		env("EMAIL_ADDRESS", true),
 		envOrDefault("TAG_PREFIX", "urlprefix-"),
 		envOrDefault("KV_CONFIG_ROOT", "certs/config/"),
