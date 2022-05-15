@@ -11,6 +11,7 @@ import (
 )
 
 type Manager struct {
+	defaultEnabled                bool
 	emailAddress                  string
 	tagPrefix                     string
 	kvConfigRoot                  string
@@ -26,7 +27,7 @@ type Manager struct {
 	challengeResponderJobTimeout  time.Duration
 }
 
-func createManager(emailAddress string, tagPrefix string, configRoot string, certRoot string, challengeRoot string, acmeDirectoryUrl string, renewWithin time.Duration, challengeResponderJobFilename string, challengeResponderJobTimeout time.Duration) *Manager {
+func createManager(defaultEnabled bool, emailAddress string, tagPrefix string, configRoot string, certRoot string, challengeRoot string, acmeDirectoryUrl string, renewWithin time.Duration, challengeResponderJobFilename string, challengeResponderJobTimeout time.Duration) *Manager {
 	var err error
 
 	// Make sure the challenge responder job definition file exists.
@@ -36,6 +37,7 @@ func createManager(emailAddress string, tagPrefix string, configRoot string, cer
 	}
 
 	manager := &Manager{
+		defaultEnabled:                defaultEnabled,
 		emailAddress:                  emailAddress,
 		tagPrefix:                     tagPrefix,
 		kvConfigRoot:                  configRoot,

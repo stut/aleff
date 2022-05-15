@@ -16,7 +16,15 @@ func (manager *Manager) discoverDomainsFromConsul() ([]string, error) {
 
 	domainMap := make(map[string]bool)
 	for _, tags := range services {
+		domains := []string{}
+		enabled := false
+		disabled := false
 		for _, tag := range tags {
+			// Exclude any challenge responder tags that might have been left around.
+			if strings.Contains(tag, ".well-known/acme-challenge") {
+				continue
+			}
+
 			if strings.HasPrefix(tag, manager.tagPrefix) {
 				url := strings.SplitN(tag, manager.tagPrefix, 2)[1]
 				url = strings.SplitN(url, " ", 2)[0]
@@ -25,8 +33,18 @@ func (manager *Manager) discoverDomainsFromConsul() ([]string, error) {
 					if strings.Contains(url, ":") {
 						separator = ":"
 					}
-					domainMap[strings.SplitN(url, separator, 2)[0]] = true
+					domains = append(domains, strings.SplitN(url, separator, 2)[0])
 				}
+			} else if tag == "aleff-enabled" {
+				enabled = true
+			} else if tag == "aleff-disabled" {
+				disabled = true
+			}
+		}
+
+		if len(domains) > 0 && (manager.defaultEnabled && !disabled) || (!manager.defaultEnabled && enabled) {
+			for _, domain := range domains {
+				domainMap[domain] = true
 			}
 		}
 	}
