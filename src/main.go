@@ -94,7 +94,8 @@ func main() {
 		log.Fatalf("Failed to parse RENEW_WITHIN: %v", err)
 	}
 
-	metricsListenAddress := envOrDefault("PROMETHEUS_LISTEN_ADDRESS", ":2123")
+	metricsListenAddress := envOrDefault("PROMETHEUS_LISTEN_ADDRESS",
+		fmt.Sprintf(":%s", envOrDefault("NOMAD_PORT_metrics", "2123")))
 
 	manager := createManager(
 		env("EMAIL_ADDRESS", true),
