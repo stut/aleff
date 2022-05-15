@@ -16,10 +16,13 @@ func (manager *Manager) Present(domain, token, keyAuth string) error {
 		return err
 	}
 
-	err = manager.startChallengeResponder(domain, token, keyAuth)
-	if err != nil {
-		return err
+	if !manager.disableChallengeResponderJob {
+		err = manager.startChallengeResponder(domain, token, keyAuth)
+		if err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
 
@@ -29,9 +32,11 @@ func (manager *Manager) CleanUp(domain, token, keyAuth string) error {
 		return err
 	}
 
-	err = manager.stopChallengeResponder(domain)
-	if err != nil {
-		return err
+	if !manager.disableChallengeResponderJob {
+		err = manager.stopChallengeResponder(domain)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

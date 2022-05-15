@@ -22,12 +22,13 @@ type Manager struct {
 	client                        *acme.Client
 	acmeDirectoryUrl              string
 	renewWithin                   time.Duration
+	disableChallengeResponderJob  bool
 	challengeResponderJobFilename string
 	challengeResponderJob         *nomadApi.Job
 	challengeResponderJobTimeout  time.Duration
 }
 
-func createManager(defaultEnabled bool, emailAddress string, tagPrefix string, configRoot string, certRoot string, challengeRoot string, acmeDirectoryUrl string, renewWithin time.Duration, challengeResponderJobFilename string, challengeResponderJobTimeout time.Duration) *Manager {
+func createManager(defaultEnabled bool, emailAddress string, tagPrefix string, configRoot string, certRoot string, challengeRoot string, acmeDirectoryUrl string, renewWithin time.Duration, disableChallengeResponderJob bool, challengeResponderJobFilename string, challengeResponderJobTimeout time.Duration) *Manager {
 	var err error
 
 	// Make sure the challenge responder job definition file exists.
@@ -45,6 +46,7 @@ func createManager(defaultEnabled bool, emailAddress string, tagPrefix string, c
 		kvChallengeRoot:               challengeRoot,
 		acmeDirectoryUrl:              acmeDirectoryUrl,
 		renewWithin:                   renewWithin,
+		disableChallengeResponderJob:  disableChallengeResponderJob,
 		challengeResponderJobFilename: challengeResponderJobFilename,
 		challengeResponderJobTimeout:  challengeResponderJobTimeout,
 	}

@@ -113,6 +113,7 @@ func main() {
 		envOrDefault("KV_CHALLENGE_ROOT", "certs/challenges/"),
 		envOrDefault("ACME_DIR_URL", "https://acme-v02.api.letsencrypt.org/directory"),
 		renewWithin,
+		envOrDefault("DISABLE_CHALLENGE_RESPONDER_JOB", "") != "",
 		env("CHALLENGE_RESPONDER_JOB_FILENAME", true),
 		challengeResponderJobTimeout)
 
