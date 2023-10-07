@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"github.com/go-acme/lego/v4/log"
 	"github.com/hashicorp/consul/api"
 	"sort"
 	"strings"
@@ -33,7 +34,10 @@ func (manager *Manager) discoverDomainsFromConsul() ([]string, error) {
 					if strings.Contains(url, ":") {
 						separator = ":"
 					}
-					domains = append(domains, strings.SplitN(url, separator, 2)[0])
+					log.Infof("aleff: Found tag: %s", url)
+					stripped := strings.SplitN(url, separator, 2)[0]
+					log.Infof("aleff: Stripped domain: %s", url)
+					domains = append(domains, stripped)
 				}
 			} else if tag == "aleff-enabled" {
 				enabled = true
