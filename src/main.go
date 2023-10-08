@@ -131,6 +131,9 @@ func main() {
 
 	// Start an HTTP server to allow the triggering of a run outside the normal timer.
 	trigger := make(chan bool, 1)
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
 	http.HandleFunc("/run", func(w http.ResponseWriter, r *http.Request) {
 		trigger <- true
 		w.WriteHeader(http.StatusAccepted)
