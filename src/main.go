@@ -86,7 +86,7 @@ func main() {
 		log.Fatalf("Failed to parse RUN_INTERVAL: %v", err)
 	}
 
-	// Default renewWithin is 29 days.
+	// Default RENEW_WITHIN is 29 days.
 	renewWithinDefault := fmt.Sprintf("%dh", 24*29)
 	renewWithin, err = time.ParseDuration(envOrDefault("RENEW_WITHIN", renewWithinDefault))
 	if err != nil {
@@ -100,6 +100,9 @@ func main() {
 		metricErrorCounter.WithLabelValues("-", "-", "-", "duration-parse-failure-CHALLENGE_RESPONDER_JOB_TIMEOUT").Inc()
 		log.Fatalf("Failed to parse CHALLENGE_RESPONDER_JOB_TIMEOUT: %v", err)
 	}
+
+	httpListenAddress := envOrDefault("HTTP_LISTEN_ADDRESS",
+		fmt.Sprintf(":%s", envOrDefault("NOMAD_PORT_http", "2121")))
 
 	metricsListenAddress := envOrDefault("PROMETHEUS_LISTEN_ADDRESS",
 		fmt.Sprintf(":%s", envOrDefault("NOMAD_PORT_metrics", "2123")))
@@ -126,21 +129,38 @@ func main() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGKILL, syscall.SIGINT, syscall.SIGTERM)
 
-	// Start the prometheus metrics service.
-	http.Handle("/metrics", promhttp.Handler())
+	// Start an HTTP server to allow the triggering of a run outside the normal timer.
+	trigger := make(chan bool, 1)
+	http.HandleFunc("/run", func(w http.ResponseWriter, r *http.Request) {
+		trigger <- true
+		w.WriteHeader(http.StatusAccepted)
+	})
 	go func() {
-		log.Infof("aleff: Prometheus metrics available at http://%s/metrics", metricsListenAddress)
-		log.Fatal(http.ListenAndServe(metricsListenAddress, nil))
+		log.Infof("aleff: Force a run by requesting http://%s/run", httpListenAddress)
+		log.Fatal(http.ListenAndServe(httpListenAddress, nil))
 	}()
 
-	for {
-		manager.run()
+	// Start the prometheus metrics service.
+	metricsServer := http.NewServeMux()
+	metricsServer.Handle("/metrics", promhttp.Handler())
+	go func() {
+		log.Infof("aleff: Prometheus metrics available at http://%s/metrics", metricsListenAddress)
+		log.Fatal(http.ListenAndServe(metricsListenAddress, metricsServer))
+	}()
 
+	// Run once on startup.
+	manager.run()
+
+	for {
 		select {
-		case <-sigs:
+		case sig := <-sigs:
+			log.Infof("aleff: Received signal %s, exiting...", sig.String())
 			os.Exit(0)
+		case <-trigger:
+			// Note that triggering a run will restart the timer once the run is complete.
+			manager.run()
 		case <-time.After(runInterval):
-			break
+			manager.run()
 		}
 	}
 }
