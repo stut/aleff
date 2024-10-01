@@ -10,7 +10,7 @@ RUN go mod download
 
 COPY src/*.go ./
 
-RUN CGO_ENABLED=0 go build -o /aleff
+RUN CGO_ENABLED=0 go build -o /aleff -trimpath -ldflags "-s -w"
 
 FROM scratch
 
