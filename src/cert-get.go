@@ -59,7 +59,7 @@ func (manager *Manager) getCertificate(domain string) error {
 
 	request := certificate.ObtainRequest{
 		Domains: []string{domain},
-		Bundle:  false,
+		Bundle:  true,
 	}
 	certificates, err := client.Certificate.Obtain(request)
 	if err != nil {
