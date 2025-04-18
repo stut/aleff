@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/go-acme/lego/v4/log"
 	"github.com/hashicorp/nomad/api"
-	"github.com/hashicorp/nomad/jobspec"
-	"io/ioutil"
-	"net/http"
-	"time"
+	jobspec "github.com/hashicorp/nomad/jobspec2"
 )
 
 func (manager *Manager) Present(domain, token, keyAuth string) error {
@@ -49,7 +51,13 @@ func (manager *Manager) startChallengeResponder(domain, token, keyAuth string) e
 		return err
 	}
 
-	manager.challengeResponderJob, err = jobspec.ParseFile(manager.challengeResponderJobFilename)
+	file, err := os.Open(manager.challengeResponderJobFilename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	manager.challengeResponderJob, err = jobspec.Parse(manager.challengeResponderJobFilename, file)
 	manager.challengeResponderJob.TaskGroups[0].Tasks[0].Services[0].Tags = append(
 		manager.challengeResponderJob.TaskGroups[0].Tasks[0].Services[0].Tags,
 		fmt.Sprintf("%s%s:80/.well-known/acme-challenge/", manager.tagPrefix, domain))
@@ -71,7 +79,7 @@ func (manager *Manager) startChallengeResponder(domain, token, keyAuth string) e
 		if err != nil {
 			log.Warnf("[%s] aleff: Challenge responder still starting up...", domain)
 		} else {
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 			if err != nil {
 				log.Warnf("[%s] aleff: Challenge responder still spinning up...", domain)
 			} else {
